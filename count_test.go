@@ -38,7 +38,7 @@ func TestAlive(t *testing.T) {
 	}()
 
 	i := 0
-	// turn := 0
+	prevTurn := 0
 	for event := range events {
 		switch e := event.(type) {
 		// case gol.TurnComplete:
@@ -51,6 +51,15 @@ func TestAlive(t *testing.T) {
 			if e.CompletedTurns == 0 {
 				t.Fatal("Count reported for turn 0, should have a delay.")
 			}
+
+			if e.CompletedTurns == prevTurn {
+				t.Fatalf("Count reported twice for turn %v.", e.CompletedTurns)
+			}
+
+			if e.CompletedTurns < prevTurn {
+				t.Fatalf("Count reported for turn %v, previous count was for turn %v. Counts must be in ascending turn order.", e.CompletedTurns, prevTurn)
+			}
+
 			if e.CompletedTurns <= 10000 {
 				expected = alive[e.CompletedTurns]
 			} else if e.CompletedTurns%2 == 0 {
@@ -58,6 +67,7 @@ func TestAlive(t *testing.T) {
 			} else {
 				expected = 5567
 			}
+
 			actual := e.CellsCount
 			if expected != actual {
 				t.Fatalf("At turn %v expected %v alive cells, got %v instead", e.CompletedTurns, expected, actual)
@@ -68,6 +78,7 @@ func TestAlive(t *testing.T) {
 				}
 				i++
 			}
+			prevTurn = e.CompletedTurns
 		}
 		if i >= 5 {
 			keyPresses <- 'q'

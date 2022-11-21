@@ -12,6 +12,7 @@ import (
 	"uk.ac.bris.cs/gameoflife/sdl"
 )
 
+var paramRequests chan gol.Params
 var sdlEvents chan gol.Event
 var sdlAlive chan int
 
@@ -20,15 +21,18 @@ func TestMain(m *testing.M) {
 	noVis := flag.Bool("noVis", false,
 		"Disables the SDL window, so there is no visualisation during the tests.")
 	flag.Parse()
+
 	p := gol.Params{ImageWidth: 512, ImageHeight: 512}
+
 	sdlEvents = make(chan gol.Event)
 	sdlAlive = make(chan int)
 	result := make(chan int)
+
 	go func() {
 		res := m.Run()
-		go func() {
-			sdlEvents <- gol.FinalTurnComplete{}
-		}()
+		// go func() {
+		// 	sdlEvents <- gol.FinalTurnComplete{}
+		// }()
 		result <- res
 	}()
 	// sdl.Run(p, sdlEvents, nil)
@@ -44,7 +48,10 @@ func TestMain(m *testing.M) {
 
 sdlLoop:
 	for {
-		w.PollEvent()
+		if w != nil {
+			w.PollEvent()
+		}
+
 		select {
 		case event, ok := <-sdlEvents:
 			if !ok {
@@ -53,12 +60,14 @@ sdlLoop:
 				}
 				break sdlLoop
 			}
+
 			switch e := event.(type) {
 			case gol.CellFlipped:
 				board[e.Cell.Y][e.Cell.X] = ^board[e.Cell.Y][e.Cell.X]
 				if w != nil {
 					w.FlipPixel(e.Cell.X, e.Cell.Y)
 				}
+
 			case gol.TurnComplete:
 				if w != nil {
 					w.RenderFrame()
@@ -72,11 +81,13 @@ sdlLoop:
 					}
 				}
 				sdlAlive <- count
+
 			case gol.FinalTurnComplete:
 				if w != nil {
 					w.Destroy()
 				}
 				break sdlLoop
+
 			default:
 				if len(event.String()) > 0 {
 					fmt.Printf("Completed Turns %-8v%v\n", event.GetCompletedTurns(), event)
@@ -87,6 +98,12 @@ sdlLoop:
 		}
 	}
 	os.Exit(<-result)
+}
+
+func sdlFail(t *testing.T, message string) {
+	time.Sleep(5 * time.Second)
+	sdlEvents <- gol.FinalTurnComplete{}
+	t.FailNow()
 }
 
 // TestSdl tests a 512x512 image for 100 turns using 8 worker threads.
@@ -109,10 +126,11 @@ func TestSdl(t *testing.T) {
 				sdlEvents <- e
 				aliveCount := <-sdlAlive
 				if alive[turnNum] != aliveCount {
-					t.Logf("Incorrect number of alive cells displayed on turn %d. Was %d, should be %d.", turnNum, aliveCount, alive[turnNum])
-					time.Sleep(5 * time.Second)
-					sdlEvents <- gol.FinalTurnComplete{}
-					t.FailNow()
+					sdlFail(t, fmt.Sprintf("Incorrect number of alive cells displayed on turn %d. Was %d, should be %d.", turnNum, aliveCount, alive[turnNum]))
+					// t.Logf("Incorrect number of alive cells displayed on turn %d. Was %d, should be %d.", turnNum, aliveCount, alive[turnNum])
+					// time.Sleep(5 * time.Second)
+					// sdlEvents <- gol.FinalTurnComplete{}
+					// t.FailNow()
 				}
 			case gol.FinalTurnComplete:
 				final = true

@@ -1,11 +1,17 @@
 # CSA Coursework: Game of Life
 
-**[Video Walkthrough of Parallel Component (skip to 04:20 to skip IntelliJ install and project opening steps)](https://web.microsoftstream.com/video/990e039f-4bc1-4b22-b0b1-ae895ee07163)** Please note that the rest of assignment will be introduced after reading week
+**[Video Walkthrough of Parallel Component (note that submission date is incorrect in the video!) (skip to 04:20 to skip IntelliJ install and project opening steps)](https://web.microsoftstream.com/video/990e039f-4bc1-4b22-b0b1-ae895ee07163)** Please note that the rest of assignment will be introduced after reading week
 
-**[Video Walkthrough of Distributed Component](https://web.microsoftstream.com/video/604c97e7-d0a6-4fb0-8a3b-52948a740983)** Please note that the report specification will be run through next week
+**[Alternative perspective on interfaces in Go done by George](https://web.microsoftstream.com/video/30a6b464-aa7a-4e56-abf8-3534275440e3)**
+
+
+**[Video Walkthrough of Distributed Component](https://web.microsoftstream.com/video/b4f92750-6f76-4f51-8d37-93413c3cb088)** 
 <!-- **[Coursework Q&A Recording](https://web.microsoftstream.com/video/ab833321-3a78-4c83-b87e-16ce1b5c244f)** -->
 
-This is the Computer Systems A summative coursework. The coursework is worth 80% of the unit mark. It is to be completed in your programming pairs. You must report any change to your pairing to the unit director *before* starting your assignment. It runs over 4 weeks (5 weeks including the reading week) and the deadline for submitting all your work is **Friday 3rd December 13:00**.
+<!--**[Video Walkthrough of Report Component](https://web.microsoftstream.com/video/b5e8cf95-981c-4c26-8522-cc0210293d51)** Also see this document which accompanies the video: **[All report guidance with links collated into single document](https://github.com/UoB-CSA/gol-skeleton/blob/master/content/ReporGuidanceCollated.md)**-->
+
+
+This is the Computer Systems A summative coursework. The coursework is worth 80% of the unit mark. It is to be completed in your programming pairs. You must report any change to your pairing to the unit director *before* starting your assignment. It runs over 4 weeks (5 weeks including the reading week) and the deadline for submitting all your work is **Thursday 1st December 13:00**.
 
 Talk to each other regularly and make sure you manage your team well. Let us know about issues before they grow to affect your team’s performance. It is important to carefully manage your time for this assignment. Do not spend hours trying to debug on your own; use pair programming, seek help from our teaching assistants during scheduled labs and ask questions on Teams.
 
@@ -43,9 +49,10 @@ The skeleton code uses SDL. This is a basic graphics library which you already u
 
 The coursework requires two independent implementations. You will be required to submit **both** implementations (assuming both were attempted). Every student is required to upload their full work to Blackboard. There will be three separate submissions points on Blackboard - one for the report and two for each implementation.
 
-- For the report, you must submit a single file called `report.pdf`.
-- For the parallel implementation, you must submit a single zip file called `parallel.zip`. It must contain all the code required to compile and run the program.
-- For the distributed implementation, you must submit a single zip file called `distributed.zip`. It must contain all the code required to compile and run the program.
+- For the report, you must submit a single file called `report.pdf`. [report submission point - NOT YET AVAILABLE](#)
+- For the parallel implementation, you must submit a single zip file called `parallel.zip`. It must contain all the code required to compile and run the program. [parallel submission point - NOT YET AVAILABLE](#)
+- For the distributed implementation, you must submit a single zip file called `distributed.zip`. It must contain all the code required to compile and run the program. [distributed submission point - NOT YET AVAILABLE](#)
+- If you have multiple versions, only submit the ones you wish us to check for correctness (one zip for parallel and one for distributed). Other versions may be shared via OneDrive with Sion, Pui and Michael.
 
 Submitting different filenames or file formats (e.g. `.docx`, `.tex`, `.7z` or `.rar`) will result in a mark penalty.
 
@@ -85,7 +92,7 @@ Test your code using `go test -v -run=TestGol`. You can use tracing to verify th
 
 ![Step 3](content/cw_diagrams-Parallel_3.png)
 
-The lab sheets included the use of a timer. Now using a ticker, report the number of cells that are still alive *every 2 seconds*. To report the count use the `AliveCellsCount` event.
+The lab sheets included the use of a timer. Now using a ticker, report the number of cells that are still alive *every 2 seconds*. To report the count use the `AliveCellsCount` event. Also send the `TurnComplete` event after each complete iteration.
 
 Test your code using `go test -v -run=TestAlive`.
 
@@ -137,6 +144,18 @@ suggested steps for approaching the problem, but you are *not* required to
 follow this sequence, and can jump straight to implementing the more advanced
 versions of the system if you feel confident about it.
 
+
+**IMPORTANT: You need to modify [the count_test](https://github.com/UoB-CSA/gol-skeleton/blob/master/count_test.go) when testing your distributed implementation by replacing lines 41-53 with:**
+
+```
+for event := range events {
+    switch e := event.(type) {
+    case gol.AliveCellsCount:
+        var expected int
+```
+
+There is a modified version of the test file available [here](https://seis.bristol.ac.uk/~sh1670/dist_count_test.go)
+
 ### Step 1
 
 ![Step 1](content/cw_diagrams-Distributed_1.png)
@@ -149,11 +168,12 @@ Start by implementing a basic controller which can tell the logic engine to evol
 
 Test your implementation using `go test -v -run=TestGol/-1$` *on the controller*.
 
+
 ### Step 2
 
 ![Step 2](content/cw_diagrams-Distributed_2.png)
 
-You should report the number of cells that are still alive *every 2 seconds* to the local controller. The controller should then send an `AliveCellsCount` event to the `events` channel. It also needs to send `TurnComplete` events whenever it finishes a turn, so that the test can check the turn number. 
+You should report the number of cells that are still alive *every 2 seconds* to the local controller. The controller should then send an `AliveCellsCount` event to the `events` channel.  
 
 Test your implementation using `go test -v -run=TestAlive` *on the controller*.
 
@@ -172,13 +192,13 @@ Test your implementation using `go test -v -run=TestPgm/-1$` *on the controller*
 Finally, the local controller should be able to manage the behaviour of the GoL engine according to the following rules: 
 
 - If `s` is pressed, the controller should generate a PGM file with the current state of the board.
-- If `q` is pressed, close the controller client program without causing an error on the GoL server. A new controller should be able to take over interaction with the GoL engine.
+- If `q` is pressed, close the controller client program without causing an error on the GoL server. A new controller should be able to take over interaction with the GoL engine. Note that you are free to define the nature of how a new controller can take over interaction. Most likely the state will be reset. If you do manage to continue with the previous world this would be considered an extension and a form of fault tolerance.
 - If `k` is pressed, all components of the distributed system are shut down cleanly, and the system outputs a PGM image of the latest state.
 - If `p` is pressed, pause the processing *on the AWS node* and have the *controller* print the current turn that is being processed. If `p` is pressed again resume the processing and have the controller print `"Continuing"`. It is *not* necessary for `q` and `s` to work while the execution is paused.
 
 Test the control rules by running `go run .`.
 
-### Step 5
+### Step 5 - New for 22 - go straight to Step 6
 
 ![Step 5](content/cw_diagrams-Distributed_5.png)
 
@@ -197,9 +217,11 @@ Make sure to keep the communication between nodes as efficient as possible. For 
 
 Reducing coupling between the "Local Controller" and the "GOL workers" is desirable. To initiate communication, the "Local Controller" connects to the broker machine via RPC. This allows the "Local Controller" to start the game by calling the main "Broker" method, which returns the final game state once it is finished. Likewise, the "Broker" connects to the "GOL workers". It is then able to give them slices of the game world and ask them to return the result of iterating on it.
 
+**Note that it is fine to have the Broker and Local Controller running on the same machine to get around firewall / port forwarding issues**
+
 #### Largest Image
 
-*We created a [5120x5120 pgm file](https://uob-my.sharepoint.com/:u:/g/personal/kg17815_bristol_ac_uk/EUWlZMH2MetHuNF8Ua3nb7EBx-LJqqU6OeFAW0SuHvr0pw?e=hWK1W0) if you wish to test or benchmark your solution with a very large image.*
+*We created a [5120x5120 pgm file](http://seis.bristol.ac.uk/~sh1670/5120x5120.pgm) if you wish to test or benchmark your solution with a very large image.*
 
 ### Success Criteria
 

@@ -30,6 +30,14 @@ func TestPgm(t *testing.T) {
 					go gol.Run(p, events, nil)
 					for range events {
 					}
+
+					defer func() {
+						r := recover()
+						if r != nil {
+							t.Errorf("Failed to read alive cells from output file. Error: %s", r)
+						}
+					}()
+
 					cellsFromImage := readAliveCells(
 						"out/"+fmt.Sprintf("%vx%vx%v.pgm", p.ImageWidth, p.ImageHeight, turns),
 						p.ImageWidth,

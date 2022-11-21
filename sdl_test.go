@@ -124,6 +124,11 @@ func TestSdl(t *testing.T) {
 				sdlEvents <- e
 			case gol.TurnComplete:
 				turnNum++
+
+				if turnNum != e.CompletedTurns {
+					sdlFail(t, fmt.Sprintf("Incorrect turn number for TurnComplete. Was %d, should be %d.", e.CompletedTurns, turnNum))
+				}
+
 				sdlEvents <- e
 				aliveCount := <-sdlAlive
 				if alive[turnNum] != aliveCount {

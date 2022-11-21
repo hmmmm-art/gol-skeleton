@@ -16,26 +16,7 @@ var paramRequests chan gol.Params
 var sdlEvents chan gol.Event
 var sdlAlive chan int
 
-func TestMain(m *testing.M) {
-	runtime.LockOSThread()
-	noVis := flag.Bool("noVis", false,
-		"Disables the SDL window, so there is no visualisation during the tests.")
-	flag.Parse()
-
-	p := gol.Params{ImageWidth: 512, ImageHeight: 512}
-
-	sdlEvents = make(chan gol.Event)
-	sdlAlive = make(chan int)
-	result := make(chan int)
-
-	go func() {
-		res := m.Run()
-		// go func() {
-		// 	sdlEvents <- gol.FinalTurnComplete{}
-		// }()
-		result <- res
-	}()
-	// sdl.Run(p, sdlEvents, nil)
+func runSdl(p gol.Params, noVis *bool) {
 	var w *sdl.Window = nil
 	if !(*noVis) {
 		w = sdl.NewWindow(int32(p.ImageWidth), int32(p.ImageHeight))
@@ -97,6 +78,30 @@ sdlLoop:
 			break
 		}
 	}
+}
+
+func TestMain(m *testing.M) {
+	runtime.LockOSThread()
+	noVis := flag.Bool("noVis", false,
+		"Disables the SDL window, so there is no visualisation during the tests.")
+	flag.Parse()
+
+	p := gol.Params{ImageWidth: 512, ImageHeight: 512}
+
+	sdlEvents = make(chan gol.Event)
+	sdlAlive = make(chan int)
+	result := make(chan int)
+
+	go func() {
+		res := m.Run()
+		// go func() {
+		// 	sdlEvents <- gol.FinalTurnComplete{}
+		// }()
+		result <- res
+	}()
+
+	runSdl(p, noVis)
+
 	os.Exit(<-result)
 }
 

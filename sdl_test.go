@@ -129,16 +129,24 @@ func TestSdl(t *testing.T) {
 					sdlFail(t, fmt.Sprintf("Incorrect turn number for TurnComplete. Was %d, should be %d.", e.CompletedTurns, turnNum))
 				}
 
+				if e.CompletedTurns > p.Turns {
+					sdlFail(t, fmt.Sprintf("Too many TurnComplete events sent. Last TurnComplete was for turn %d. Simulation should only run for %d turns.", e.CompletedTurns, p.Turns))
+				}
+
 				sdlEvents <- e
 				aliveCount := <-sdlAlive
 				if alive[turnNum] != aliveCount {
 					sdlFail(t, fmt.Sprintf("Incorrect number of alive cells displayed on turn %d. Was %d, should be %d.", turnNum, aliveCount, alive[turnNum]))
-					// t.Logf("Incorrect number of alive cells displayed on turn %d. Was %d, should be %d.", turnNum, aliveCount, alive[turnNum])
-					// time.Sleep(5 * time.Second)
-					// sdlEvents <- gol.FinalTurnComplete{}
-					// t.FailNow()
 				}
 			case gol.FinalTurnComplete:
+				if e.CompletedTurns != p.Turns {
+					sdlFail(t, fmt.Sprintf("Incorrect final turn number. Was %d, should be %d.", e.CompletedTurns, p.Turns))
+				}
+
+				if turnNum < p.Turns {
+					sdlFail(t, fmt.Sprintf("More TurnComplete events expected before FinalTurnComplete. Last TurnComplete was for turn %d.", turnNum))
+				}
+
 				final = true
 				sdlEvents <- e
 			}

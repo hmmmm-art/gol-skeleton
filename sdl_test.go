@@ -101,6 +101,7 @@ sdlLoop:
 }
 
 func sdlFail(t *testing.T, message string) {
+	t.Log(message)
 	time.Sleep(5 * time.Second)
 	sdlEvents <- gol.FinalTurnComplete{}
 	t.FailNow()

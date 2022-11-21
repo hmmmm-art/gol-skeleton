@@ -13,6 +13,7 @@ import (
 )
 
 var paramRequests chan gol.Params
+var testsComplete chan bool
 var sdlEvents chan gol.Event
 var sdlAlive chan int
 
@@ -86,7 +87,10 @@ func TestMain(m *testing.M) {
 		"Disables the SDL window, so there is no visualisation during the tests.")
 	flag.Parse()
 
-	p := gol.Params{ImageWidth: 512, ImageHeight: 512}
+	// p := gol.Params{ImageWidth: 512, ImageHeight: 512}
+
+	paramRequests = make(chan gol.Params)
+	testsComplete = make(chan bool)
 
 	sdlEvents = make(chan gol.Event)
 	sdlAlive = make(chan int)
@@ -97,10 +101,19 @@ func TestMain(m *testing.M) {
 		// go func() {
 		// 	sdlEvents <- gol.FinalTurnComplete{}
 		// }()
+		testsComplete <- true
 		result <- res
 	}()
 
-	runSdl(p, noVis)
+	running := true
+	for running {
+		select {
+		case p := <-paramRequests:
+			runSdl(p, noVis)
+		case <-testsComplete:
+			running = false
+		}
+	}
 
 	os.Exit(<-result)
 }
@@ -115,6 +128,8 @@ func sdlFail(t *testing.T, message string) {
 // TestSdl tests a 512x512 image for 100 turns using 8 worker threads.
 func TestSdl(t *testing.T) {
 	p := gol.Params{ImageWidth: 512, ImageHeight: 512, Turns: 100, Threads: 8}
+	paramRequests <- p
+
 	testName := fmt.Sprintf("%dx%dx%d-%d", p.ImageWidth, p.ImageHeight, p.Turns, p.Threads)
 	alive := readAliveCounts(p.ImageWidth, p.ImageHeight)
 	t.Run(testName, func(t *testing.T) {

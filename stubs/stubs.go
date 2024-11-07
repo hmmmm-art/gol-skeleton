@@ -52,6 +52,12 @@ type ConnectNode struct {
    Function string
 }
 
+type CountAliveRequest struct{
+}
+
+type CountAliveResponse struct{
+	Count int
+}
 
 // NodeArgs holds the data each worker needs to process a part of the game.
 type NodeArgs struct {

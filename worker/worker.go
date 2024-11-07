@@ -14,7 +14,8 @@ import (
 
 
 func (*Worker) GolEngine(req stubs.NodeArgs, response *stubs.NodeResp) (err error) {
-   height := (req.YEnd - req.YStart) + 1
+   
+	height := (req.YEnd - req.YStart) + 1
    newWorld := make([][]byte, height)
    for col := range newWorld {
        newWorld[col] = make([]byte, req.ImageWidth)
